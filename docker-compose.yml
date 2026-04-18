@@ -1,0 +1,11 @@
+version: '3.8'
+services:
+  voicebot:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./voices:/app/voices
+    environment:
+      - GROQ_API_KEY=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
+    restart: always
