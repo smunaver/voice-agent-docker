@@ -7,5 +7,5 @@ services:
     volumes:
       - ./voices:/app/voices
     environment:
-      - GROQ_API_KEY=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
+      - GROQ_API_KEY=gsk_fGEUTzkXs8HHoavfaJy7WGdyb3FYKc1K1EIZPcWzicta3aVu15j4303012356$ultanM
     restart: always
