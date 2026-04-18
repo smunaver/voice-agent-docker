@@ -1,0 +1,79 @@
+📄 SOP: Hybrid Voice-AI Chatbot Deployment
+Document Version: 1.0
+Architecture: Client-Server (Hybrid Cloud/Local)
+Isolation Method: Docker Containerization
+Objective: Deploy a low-latency voice interface using Cloud LLM (Groq) and Local Senses (Whisper/Piper) with zero impact on the Host OS.
+
+1. System Prerequisites
+1.1 Hardware Requirements
+OS: Windows 10/11 (64-bit).
+Storage: Minimum 2GB free space on D: Drive.
+Hardware: Functional Microphone and Speakers.
+Connectivity: Active Internet connection (required for Groq API).
+1.2 Software Dependencies
+Docker Desktop: Installed and configured to use WSL2 backend.
+Python 3.10+: Installed on Windows Host (for the Client Relay).
+API Access: Valid Groq Cloud API Key.
+2. Directory Architecture
+The project must follow the strict directory structure below to ensure Docker volume mapping functions correctly.
+
+Root Directory: D:\VoiceBot-Docker\
+
+VoiceBot-Docker/
+├── app/
+│   ├── main.py             # Backend API (FastAPI)
+│   └── requirements.txt    # Python Environment Specs
+├── voices/                 # Voice Model Storage (Volume Mapped)
+│   ├── voice.onnx          # Piper Voice Model
+│   └── voice.onnx.json     # Voice Configuration
+├── client/
+│   └── relay.py            # Windows Hardware Interface
+├── Dockerfile              # Container Blueprint
+└── docker-compose.yml       # Orchestration Configuration
+3. Deployment Workflow
+Phase I: Asset Acquisition
+API Key: Generate a secret key from console.groq.com.
+Voice Models:
+Download lessac_medium.onnx and lessac_medium.onnx.json.
+Place files in D:\VoiceBot-Docker\voices\.
+Rename to voice.onnx and voice.onnx.json.
+Phase II: Configuration
+Open docker-compose.yml.
+Locate the environment section.
+Update GROQ_API_KEY=PASTE_YOUR_KEY_HERE with your actual secret key.
+Phase III: Container Initialization
+Open PowerShell in the root directory (D:\VoiceBot-Docker\).
+Execute the build command:
+docker-compose up --build -d
+Verify the status:
+docker ps
+Expected Result: Container voicebot status = "Up".
+Phase IV: Client Interface Setup
+Install necessary Python libraries on the Windows Host:
+pip install requests pyaudio
+Navigate to the client directory:
+cd client
+Execute the relay script:
+python relay.py
+4. Operational Logic (Execution Flow)
+The system operates via the following pipeline:
+
+Capture: relay.py records 5 seconds of audio $\rightarrow$ saves as temp_req.wav.
+Transmission: relay.py sends .wav via HTTP POST to localhost:8000/process_voice.
+Transcription: Docker Server uses Faster-Whisper to convert audio $\rightarrow$ Text.
+Inference: Text is sent to Groq Cloud API $\rightarrow$ Text Response.
+Synthesis: Piper TTS converts response $\rightarrow$ output.wav.
+Delivery: Server returns .wav to Client $\rightarrow$ relay.py plays audio via Windows OS.
+5. Maintenance & Troubleshooting
+Issue	Likely Cause	Resolution
+401 Unauthorized	Invalid API Key	Update docker-compose.yml $\rightarrow$ docker-compose up -d
+No Device Found	Mic/Speaker disconnected	Check Windows Sound Settings $\rightarrow$ Restart relay.py
+Container Crash	Missing Voice Files	Ensure voice.onnx is in D:\VoiceBot-Docker\voices\
+High Latency	Internet Connection	Check ping to api.groq.com
+6. Decommissioning (Clean-up)
+To completely remove the system without leaving any trace on the host:
+
+Stop Container: docker-compose down
+Remove Image: docker rmi voicebot-app (or via Docker Desktop GUI).
+Delete Folder: Delete D:\VoiceBot-Docker\.
+End of Document.
